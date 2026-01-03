@@ -1,0 +1,92 @@
+:root {
+    --max-z-index: 2147483647;
+    --font-size-base: 16px;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.flex-container {
+    display: flex;
+}
+
+.converted-value-container {
+    position: absolute;
+    display: none;
+    z-index: var(--max-z-index);
+    padding: 5px;
+    left: 0;
+    top: 0;
+    border: 1px solid black;
+    border-radius: 5px;
+    background-color: white;
+    color: black;
+    font-family: system-ui, sans-serif;
+    font-size: var(--font-size-base);
+}
+
+.converted-value-container.shadow-top {
+    box-shadow: -2px -2px 3px rgba(0,0,0,0.5);
+}
+
+.converted-value-container.shadow-bottom {
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
+}
+
+.converted-value-container::before, .converted-value-container::after {
+    content: '';
+    z-index: var(--max-z-index);
+    position: absolute;
+    left: calc(50% - 10px);
+    border: 10px solid transparent;
+}
+
+.converted-value-container.triangle-bottom::before, .converted-value-container.triangle-bottom::after {
+    bottom: -20px;
+    border-top: 10px solid black;
+}
+
+.converted-value-container.triangle-bottom::after {
+    bottom: -19px;
+    border-top: 10px solid white;
+}
+
+.converted-value-container.triangle-top::before, .converted-value-container.triangle-top::after {
+    bottom: 31px;
+    border-bottom: 10px solid black;
+}
+
+.converted-value-container.triangle-top::after {
+    bottom: 30px;
+    border-bottom: 10px solid white;
+}
+
+.converted-value-container.triangle-right::before, .converted-value-container.triangle-right::after {
+    left: calc(100% - 25px);
+}
+
+.converted-value-container.triangle-left::before, .converted-value-container.triangle-left::after {
+    left: 5px;
+}
+
+.spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 3px solid #ccc;              /* светлая граница */
+    border-top: 3px solid #333;          /* тёмная часть, создающая эффект вращения */
+    border-radius: 50%;
+    animation: css-animation-spin 1s linear infinite;  /* бесконечное вращение */
+}
+
+@keyframes css-animation-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

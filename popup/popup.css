@@ -1,0 +1,56 @@
+:root {
+    --font-family-base: system-ui;
+    --popup-font-size: 16px;
+    --popup-min-width: 321px;
+    --popup-min-height: 130px;
+    --border-radius: 10px;
+    --light-color: #FFF;
+    --error-color: #f44336;
+    --success-color: #4CAF50;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 10px;
+    min-width: var(--popup-min-width);
+    font-family: var(--font-family-base), sans-serif;
+}
+
+label {
+    font-size: var(--popup-font-size);
+}
+
+select {
+    font-family: inherit;
+    font-size: var(--popup-font-size);
+    border-radius: var(--border-radius);
+}
+
+.popup-header {
+    padding: 0;
+    margin: 0;
+}
+
+.alert-error {
+    padding: 5px 15px;
+    color: var(--light-color);
+    background-color: var(--error-color);
+    border-radius: 5px;
+    font-size: var(--popup-font-size);
+}
+
+.alert-success {
+    padding: 5px 15px;
+    color: var(--light-color);
+    background-color: var(--success-color);
+    border-radius: 5px;
+    font-size: var(--popup-font-size);
+}
+
+.mb10 {
+    margin-bottom: 10px;
+}
