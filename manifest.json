@@ -9,6 +9,13 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "type": "module",
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -22,12 +29,13 @@
       ]
     }
   ],
-  "action": {
-    "default_popup": "popup/popup.html"
-  },
   "permissions": [
     "scripting",
     "activeTab",
     "storage"
+  ],
+  "host_permissions": [
+    "https://cdn.jsdelivr.net/*",
+    "https://latest.currency-api.pages.dev/*"
   ]
 }

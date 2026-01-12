@@ -1,28 +1,40 @@
 const baseCurrencySelect = document.getElementById("base-currency");
 
-baseCurrencySelect.addEventListener("change", (event) => {
+baseCurrencySelect.addEventListener("change", async (event) => {
     const baseCurrency = event.target.value;
-    chrome.storage.local.set({'baseCurrency': baseCurrency});
-    //document.appendChild()
-    //getCurrencyRates(baseCurrency);
+    await chrome.storage.local.set({'baseCurrency': baseCurrency});
+    await chrome.runtime.sendMessage({type: 'GET_CURRENCY_RATES', baseCurrency}, response => {
+        console.log(response);
+    });
 });
 
-async function getCurrencies() {
-    const url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies.min.json';
-    try {
-        const response = await fetch(url);
-        if(!response.ok){
-            throw new Error(`Error ${response.status}`);
-        }   
-        const data = await response.json();
-        const selectedBaseCurrency = await chrome.storage.local.get('baseCurrency');
-        for (const [key, value] of Object.entries(data)) {
-            const optionText = key.toUpperCase() + (value ? ' - ' + value : '');
-            const option = createNewOption(key, optionText, selectedBaseCurrency.baseCurrency === key);
-            baseCurrencySelect.appendChild(option);
-        }
-    } catch (error) {
-        console.error(error);
+async function loadBaseCurrencies(){
+    const currencies = await fetch('../currencies.base.json');
+    return await currencies.json();
+}
+
+async function loadRemoteCurrencies(){
+    const {currenciesRemote} = await chrome.storage.local.get('currenciesRemote');
+    return currenciesRemote?.currencies ?? {};
+}
+
+async function loadCurrenciesForSelect(){
+    const base = await loadBaseCurrencies();
+    const remote = await loadRemoteCurrencies();
+
+    const merged = {
+        ...base,
+        ...remote
+    }
+
+    await renderSelect(merged);
+}
+
+async function renderSelect(currencies){
+    for (const [key, value] of Object.entries(currencies)) {
+        const {baseCurrency} = await chrome.storage.local.get('baseCurrency');
+        const option = createNewOption(key, `${key.toUpperCase()} - ${value}`, key === baseCurrency);
+        baseCurrencySelect.appendChild(option);
     }
 }
 
@@ -34,24 +46,4 @@ function createNewOption(value, text, selected){
     return option;
 }
 
-function createAlertElement(){
-    const alert = document.createElement("div");
-    alert.classList.add("alert");
-    alert.classList.add("alert-success");
-}
-
-async function getCurrencyRates(currency){
-    const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${currency}.min.json`;
-    try {
-        const response = await fetch(url);
-        if(!response.ok){
-            throw new Error(`Error ${response.status}`);
-        }
-        const data = await response.json();
-        chrome.storage.local.set({'currencyRates': JSON.stringify(data)});
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-//getCurrencies();
+document.addEventListener("DOMContentLoaded", loadCurrenciesForSelect);
