@@ -11,12 +11,13 @@ export async function getCurrencies() {
 
     try {
         const currencies = await fetchCurrencies();
+
         await chrome.storage.local.set({
             [STORAGE_KEY]: {
-                    currencies,
-                    timestamp: Date.now()
-                }
-            });
+                currencies,
+                timestamp: Date.now()
+            }
+        });
 
         return currencies;
     } catch (error) {

@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
     if (message.type === "GET_CURRENCY_RATES") {
-        getCurrencyRates(message.baseCurrency).then(sendResponse);
+        getCurrencyRates(message.baseCurrency, message.force).then(sendResponse);
         return true;
     }
 });

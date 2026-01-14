@@ -6,12 +6,15 @@
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <h1 class="popup-header mb10">Simple currency converter</h1>
-
-    <label for="base-currency">Base currency:</label>
-    <select id="base-currency">
-        <option value="">Select base currency</option>
-    </select>
+    <div class="wrapper">
+        <h1 class="popup-header">Простой конвертер валют</h1>
+        <label for="base-currency">Валюта, в которую будет производиться конвертация:</label>
+        <select id="base-currency">
+            <option value="">Выберите валюту</option>
+        </select>
+        <button id="refresh">Обновить</button>
+        <p class="status" id="status"></p>
+    </div>
 
     <script src="popup.js"></script>
 </body>

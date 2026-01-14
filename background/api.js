@@ -14,7 +14,7 @@ async function fetchWithFallback(endpoints) {
     throw new Error("Failed to fetch all API endpoints\n" + errors.join('\n'));
 }
 
-export async function fetchCurrencies(){
+export async function fetchCurrencies() {
     const endpoints = [
         'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies.min.json',
         'https://latest.currency-api.pages.dev/v1/currencies.min.json',
@@ -24,7 +24,7 @@ export async function fetchCurrencies(){
     return await fetchWithFallback(endpoints);
 }
 
-export async function fetchCurrencyRates(currency){
+export async function fetchCurrencyRates(currency) {
     const endpoints = [
         `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${currency}.min.json`,
         `https://latest.currency-api.pages.dev/v1/currencies/${currency}.min.json`,

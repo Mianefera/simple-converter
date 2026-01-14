@@ -3,19 +3,25 @@ import {fetchCurrencyRates} from "./api.js";
 const RATES_TTL = 60 * 60 * 24; // 1 day
 const STORAGE_KEY = 'currencyRatesData';
 
-export async function getCurrencyRates(baseCurrency){
-    const {[STORAGE_KEY]: cached} = await chrome.storage.local.get(STORAGE_KEY);
-    if(cached
-        && cached.data.hasOwnProperty(baseCurrency)
-        && Date.now() - cached.timestamp < RATES_TTL){
-        return { ...cached, cached: true };
+export async function getCurrencyRates(baseCurrency, force = false) {
+    const {[STORAGE_KEY]: cachedRates} = await chrome.storage.local.get(STORAGE_KEY);
+
+    if (!force
+        && cachedRates
+        && cachedRates.hasOwnProperty(baseCurrency)
+        && Date.now() - cachedRates.timestamp < RATES_TTL) {
+        return {
+            ...cachedRates,
+            cached: true,
+            status: 'ok'
+        };
     }
 
     try {
-        const data = await fetchCurrencyRates(baseCurrency);
+        const rates = await fetchCurrencyRates(baseCurrency);
 
         const payload = {
-            data,
+            rates,
             timestamp: Date.now()
         }
 
@@ -23,8 +29,24 @@ export async function getCurrencyRates(baseCurrency){
             [STORAGE_KEY]: payload
         });
 
-        return { ...payload, cached: false };
+        return {
+            ...payload,
+            cached: false,
+            status: 'ok'
+        };
     } catch (error) {
-        return cached ? { ...cached, cached: true } : {};
+        if (cachedRates) {
+            return {
+                ...cachedRates,
+                cached: true,
+                status: 'stale',
+                message: 'Используются устаревшие курсы'
+            }
+        }
+
+        return {
+            status: 'error',
+            message: 'Не удалось загрузить курсы валют'
+        };
     }
 }
