@@ -27,6 +27,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;
     flex-wrap: wrap;
     row-gap: 10px;
 }
@@ -46,23 +47,28 @@ select {
     margin: 0;
 }
 
-.status {
+.status-message {
     font-size: var(--popup-font-size);
     margin-top: 6px;
 }
 
-.status.success {
+.status-message.success {
     color: var(--success-color);
 }
 
-.status.warning {
+.status-message.warning {
     color: var(--warning-color);
 }
 
-.status.error {
+.status-message.error {
     color: var(--error-color);
 }
 
-.status.info {
+.status-message.info {
     color: var(--info-color);
+}
+
+.muted {
+    font-size: 14px;
+    color: #888;
 }

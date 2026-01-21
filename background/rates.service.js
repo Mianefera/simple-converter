@@ -1,17 +1,33 @@
 import {fetchCurrencyRates} from "./api.js";
 
 const RATES_TTL = 60 * 60 * 24; // 1 day
-const STORAGE_KEY = 'currencyRatesData';
+const RATES_DATA_KEY = 'ratesData';
+const RATES_STATE_KEY = 'ratesState';
 
 export async function getCurrencyRates(baseCurrency, force = false) {
-    const {[STORAGE_KEY]: cachedRates} = await chrome.storage.local.get(STORAGE_KEY);
+    const storage = await chrome.storage.local.get([RATES_DATA_KEY, RATES_STATE_KEY]);
+
+    const cachedRates = storage[RATES_DATA_KEY];
+
+    const isCacheValid =
+        cachedRates
+        && cachedRates.base === baseCurrency
+        && Date.now() - cachedRates.timestamp < RATES_TTL;
 
     if (!force
-        && cachedRates
-        && cachedRates.hasOwnProperty(baseCurrency)
-        && Date.now() - cachedRates.timestamp < RATES_TTL) {
+        && isCacheValid) {
+
+        const state = {
+            status: 'ok',
+            cached: true,
+            timestamp: cachedRates.timestamp,
+            base: baseCurrency
+        };
+
+        await chrome.storage.local.set({[RATES_STATE_KEY]: state});
+
         return {
-            ...cachedRates,
+            data: cachedRates[baseCurrency],
             cached: true,
             status: 'ok'
         };
@@ -20,33 +36,69 @@ export async function getCurrencyRates(baseCurrency, force = false) {
     try {
         const rates = await fetchCurrencyRates(baseCurrency);
 
-        const payload = {
-            rates,
+        const ratesData = {
+            base: baseCurrency,
+            rates: rates[baseCurrency],
             timestamp: Date.now()
-        }
+        };
 
-        await chrome.storage.local.set({
-            [STORAGE_KEY]: payload
-        });
+        await chrome.storage.local.set({[RATES_DATA_KEY]: ratesData});
+
+        const ratesState = {
+            status: 'ok',
+            cached: false,
+            timestamp: ratesData.timestamp,
+            base: baseCurrency
+        };
+
+        await chrome.storage.local.set({[RATES_STATE_KEY]: ratesState});
 
         return {
-            ...payload,
+            data: ratesData.rates,
             cached: false,
             status: 'ok'
         };
     } catch (error) {
-        if (cachedRates) {
-            return {
-                ...cachedRates,
+        console.warn('Rates fetch failed', error);
+
+        if (cachedRates && cachedRates.base === baseCurrency) {
+            const ratesState = {
+                status: 'stale',
                 cached: true,
+                timestamp: cachedRates.timestamp,
+                base: baseCurrency
+            };
+
+            await chrome.storage.local.set({[RATES_STATE_KEY]: ratesState});
+
+            return {
+                data: cachedRates.rates,
                 status: 'stale',
                 message: 'Используются устаревшие курсы'
             }
         }
 
+        const ratesState = {
+            status: 'error',
+            cached: false,
+            timestamp: Date.now(),
+            base: baseCurrency
+        };
+
+        await chrome.storage.local.set({[RATES_STATE_KEY]: ratesState});
+
         return {
             status: 'error',
             message: 'Не удалось загрузить курсы валют'
         };
+    }
+}
+
+export async function getRatesStatus() {
+    const {status} = await chrome.storage.local.get([RATES_STATE_KEY]);
+
+    return status ?? {
+        status: 'error',
+        message: 'Не удалось загрузить курсы валют'
     }
 }

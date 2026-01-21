@@ -12,8 +12,12 @@
         <select id="base-currency">
             <option value="">Выберите валюту</option>
         </select>
-        <button id="refresh">Обновить</button>
-        <p class="status" id="status"></p>
+        <div class="status">
+            <button id="refresh">Обновить</button>
+            <p class="status-message" id="status"></p>
+            <p id="updated" class="muted"></p>
+        </div>
+
     </div>
 
     <script src="popup.js"></script>
