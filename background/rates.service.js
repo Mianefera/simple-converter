@@ -1,6 +1,6 @@
 import {fetchCurrencyRates} from "./api.js";
 
-const RATES_TTL = 60 * 60 * 24; // 1 day
+const RATES_TTL = 1000 * 60 * 60 * 24; // 1 day
 const RATES_DATA_KEY = 'ratesData';
 const RATES_STATE_KEY = 'ratesState';
 

@@ -47,6 +47,13 @@ select {
     margin: 0;
 }
 
+.status {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 10px;
+    align-items: center;
+}
+
 .status-message {
     font-size: var(--popup-font-size);
     margin-top: 6px;

@@ -19,12 +19,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await renderSelect();//loadCurrenciesForSelect();
+    requestRates(false);
     const {ratesState} = await chrome.storage.local.get('ratesState');
     if (ratesState?.timestamp) {
         updatedMessage.textContent = 'Обновлено: ' + formatUpdated(ratesState.timestamp);
     }
-    await loadCurrenciesForSelect();
-    requestRates(false);
 });
 
 refreshButton.addEventListener('click', () => {
@@ -75,33 +75,8 @@ function updateStatusMessage(response) {
     }
 }
 
-async function loadBaseCurrencies() {
-    const currencies = await fetch('../currencies.base.json');
-    return await currencies.json();
-}
-
-async function loadRemoteCurrencies() {
-    return new Promise((resolve) => {
-        chrome.runtime.sendMessage({type: 'GET_CURRENCIES'}, (response) => {
-            resolve(response ?? {});
-        });
-    });
-}
-
-async function loadCurrenciesForSelect() {
-    const base = await loadBaseCurrencies();
-    const remote = await loadRemoteCurrencies();
-
-    const merged = {
-        ...base,
-        ...remote
-    }
-
-    await renderSelect(merged);
-}
-
-async function renderSelect(currencies) {
-    const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
+async function renderSelect() {
+    const {selectedCurrency, currencies} = await chrome.storage.local.get(['selectedCurrency','currencies']);
     for (const [key, value] of Object.entries(currencies)) {
         const option = createNewOption(
             key,
