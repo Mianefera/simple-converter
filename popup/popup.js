@@ -2,6 +2,7 @@ const baseCurrencySelect = document.getElementById('base-currency');
 const refreshButton = document.getElementById('refresh');
 const statusMessage = document.getElementById('status');
 const updatedMessage = document.getElementById('updated');
+const POPULAR = ['usd', 'eur', 'gbp', 'cny', 'jpy', 'rub'];
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.ratesState) {
@@ -19,7 +20,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await renderSelect();//loadCurrenciesForSelect();
+    await renderSelect();
     requestRates(false);
     const {ratesState} = await chrome.storage.local.get('ratesState');
     if (ratesState?.timestamp) {
@@ -77,11 +78,15 @@ function updateStatusMessage(response) {
 
 async function renderSelect() {
     const {selectedCurrency, currencies} = await chrome.storage.local.get(['selectedCurrency','currencies']);
-    for (const [key, value] of Object.entries(currencies)) {
+    const sorted = sortCurrencies(currencies, 'popular');
+
+    baseCurrencySelect.innerHTML = '';
+
+    for (const [code, name] of sorted) {
         const option = createNewOption(
-            key,
-            `${key.toUpperCase()} - ${value}`,
-            key === selectedCurrency
+            code,
+            `${code.toUpperCase()} - ${name}`,
+            code === selectedCurrency
         );
         baseCurrencySelect.appendChild(option);
     }
@@ -109,4 +114,28 @@ function formatUpdated(ts) {
     if (hours < 24) return `${hours} часов назад`;
 
     return new Date(ts).toLocaleString();
+}
+
+function sortCurrencies(currencies, mode = 'code') {
+    const entries = Object.entries(currencies);
+
+    switch (mode) {
+        case 'name':
+            return entries.sort(([, a], [, b]) => a.localeCompare(b));
+
+        case 'popular':
+            return entries.sort(([codeA], [codeB]) => {
+                const includesA = POPULAR.includes(codeA);
+                const includesB = POPULAR.includes(codeB);
+
+                if (includesA && includesB) {
+                    return codeA.localeCompare(codeB);
+                }
+
+                return includesA ? -1 : includesB ? 1 : codeA.localeCompare(codeB);
+            });
+
+        default:
+            return entries.sort(([a], [b]) => a.localeCompare(b));
+    }
 }
