@@ -2,7 +2,9 @@ const baseCurrencySelect = document.getElementById('base-currency');
 const refreshButton = document.getElementById('refresh');
 const statusMessage = document.getElementById('status');
 const updatedMessage = document.getElementById('updated');
+const searchInput = document.getElementById('currency-search');
 const POPULAR = ['usd', 'eur', 'gbp', 'cny', 'jpy', 'rub'];
+let allCurrencies = [];
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local" || !changes.ratesState) {
@@ -20,7 +22,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await renderSelect();
+    const {currencies, selectedCurrency} = await chrome.storage.local.get(['currencies','selectedCurrency']);
+    allCurrencies = sortCurrencies(currencies);
+    renderSelect(allCurrencies);
+    baseCurrencySelect.value = selectedCurrency;
+
     requestRates(false);
     const {ratesState} = await chrome.storage.local.get('ratesState');
     if (ratesState?.timestamp) {
@@ -38,6 +44,26 @@ baseCurrencySelect.addEventListener('change', (event) => {
     const selectedCurrency = event.target.value;
     chrome.storage.local.set({selectedCurrency});
     requestRates();
+});
+
+searchInput.addEventListener('input', (event) => {
+    const query = event.target.value.trim().toLowerCase();
+
+    if(!query){
+        renderSelect(allCurrencies);
+        return;
+    }
+
+    const filtered = allCurrencies.filter(([code, name]) =>
+        code.toLowerCase().includes(query) || name.toLowerCase().includes(query)
+    );
+
+    if (filtered.length === 0) {
+        baseCurrencySelect.innerHTML = '<option disabled>ничего не найдено</option>';
+        return;
+    }
+
+    renderSelect(filtered);
 });
 
 function requestRates(force = false) {
@@ -76,28 +102,16 @@ function updateStatusMessage(response) {
     }
 }
 
-async function renderSelect() {
-    const {selectedCurrency, currencies} = await chrome.storage.local.get(['selectedCurrency','currencies']);
-    const sorted = sortCurrencies(currencies, 'popular');
-
+function renderSelect(currencies) {
     baseCurrencySelect.innerHTML = '';
 
-    for (const [code, name] of sorted) {
-        const option = createNewOption(
-            code,
-            `${code.toUpperCase()} - ${name}`,
-            code === selectedCurrency
-        );
+    for (const [code, name] of currencies) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.text = `${code.toUpperCase()} - ${name}`;
+        //option.selected = selected;
         baseCurrencySelect.appendChild(option);
     }
-}
-
-function createNewOption(value, text, selected) {
-    const option = document.createElement('option');
-    option.value = value;
-    option.text = text;
-    option.selected = selected;
-    return option;
 }
 
 function formatUpdated(ts) {

@@ -42,6 +42,10 @@ select {
     border-radius: var(--border-radius);
 }
 
+#base-currency, #currency-search {
+    width: 100%;
+}
+
 .popup-header {
     padding: 0;
     margin: 0;
