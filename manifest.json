@@ -1,5 +1,6 @@
 {
-  "name": "Simple currency converter",
+  "default_locale": "en",
+  "name": "__MSG_extension_name__",
   "description": "Converts currency from a selected text",
   "version": "1.0",
   "manifest_version": 3,

@@ -1,0 +1,59 @@
+{
+  "extension_name": {
+    "message": "Simple currency converter"
+  },
+  "search_placeholder": {
+    "message": "Search currency..."
+  },
+  "refresh_button": {
+    "message": "Refresh"
+  },
+  "rates_updated": {
+    "message": "Rates updated"
+  },
+  "rates_unavailable": {
+    "message": "Rates unavailable"
+  },
+  "rates_actual": {
+    "message": "Rates are actual (cache)"
+  },
+  "checking_rates": {
+    "message": "Checking rates..."
+  },
+  "choose_currency": {
+    "message": "Choose currency"
+  },
+  "base_currency": {
+    "message": "The currency into which the conversion will be made:"
+  },
+  "nothing_found": {
+    "message": "Nothing found"
+  },
+  "updated_recently": {
+    "message": "Updated recently"
+  },
+  "updated_minutes": {
+    "message": "Updated $min$ minutes ago",
+    "placeholders": {
+      "min": {
+        "content": "$1"
+      }
+    }
+  },
+  "updated_hours": {
+    "message": "Updated $h$ hours ago",
+    "placeholders": {
+      "h": {
+        "content": "$1"
+      }
+    }
+  },
+  "updated_date": {
+    "message": "Updated: $date$",
+    "placeholders": {
+      "date": {
+        "content": "$1"
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "extension_name": {
+    "message": "Простой конвертер валют"
+  },
+  "search_placeholder": {
+    "message": "Поиск валюты..."
+  },
+  "refresh_button": {
+    "message": "Обновить"
+  },
+  "rates_updated": {
+    "message": "Курсы обновлены"
+  },
+  "rates_unavailable": {
+    "message": "Курсы недоступны"
+  },
+  "rates_actual": {
+    "message": "Курсы актуальны (кэш)"
+  },
+  "checking_rates": {
+    "message": "Проверка курсов..."
+  },
+  "choose_currency": {
+    "message": "Выберите валюту"
+  },
+  "base_currency": {
+    "message": "Валюта, в которую будет производиться конвертация:"
+  },
+  "nothing_found": {
+    "message": "Ничего не найдено"
+  },
+  "updated_recently": {
+    "message": "Обновлено только что"
+  },
+  "updated_minutes": {
+    "message": "Обновлено $min$ мин. назад",
+    "placeholders": {
+      "min": {
+        "content": "$1"
+      }
+    }
+  },
+  "updated_hours": {
+    "message": "Обновлено $h$ ч. назад",
+    "placeholders": {
+      "h": {
+        "content": "$1"
+      }
+    }
+  },
+  "updated_date": {
+    "message": "Обновлено: $date$",
+    "placeholders": {
+      "date": {
+        "content": "$1"
+      }
+    }
+  }
+}

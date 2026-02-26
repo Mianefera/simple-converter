@@ -13,7 +13,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     const state = changes.ratesState.newValue;
 
     if (state.timestamp) {
-        updatedMessage.textContent = 'Обновлено: ' + formatUpdated(state.timestamp);
+        updatedMessage.textContent = formatUpdated(state.timestamp);
     } else {
         updatedMessage.textContent = '';
     }
@@ -22,6 +22,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+    searchInput.placeholder = t('search_placeholder');
+    refreshButton.textContent = t('refresh_button');
+    const popupHeader = document.querySelector('.popup-header');
+    popupHeader.textContent = t('extension_name');
+    const baseCurrencyLabel = document.getElementById('base-currency-label');
+    baseCurrencyLabel.textContent = t('base_currency');
+
     const {currencies, selectedCurrency} = await chrome.storage.local.get(['currencies','selectedCurrency']);
     allCurrencies = sortCurrencies(currencies);
     renderSelect(allCurrencies);
@@ -30,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     requestRates(false);
     const {ratesState} = await chrome.storage.local.get('ratesState');
     if (ratesState?.timestamp) {
-        updatedMessage.textContent = 'Обновлено: ' + formatUpdated(ratesState.timestamp);
+        updatedMessage.textContent = formatUpdated(ratesState.timestamp);
     }
 });
 
@@ -59,7 +66,7 @@ searchInput.addEventListener('input', (event) => {
     );
 
     if (filtered.length === 0) {
-        baseCurrencySelect.innerHTML = '<option disabled>ничего не найдено</option>';
+        baseCurrencySelect.innerHTML = `<option disabled>${t('nothing_found')}</option>`;
         return;
     }
 
@@ -69,23 +76,27 @@ searchInput.addEventListener('input', (event) => {
 function requestRates(force = false) {
     const baseCurrency = baseCurrencySelect.value;
     if (!baseCurrency) {
-        statusMessage.textContent = 'Необходимо выбрать валюту';
+        statusMessage.textContent = t('choose_currency');
         statusMessage.className = 'status-message warning';
         return;
     }
 
-    statusMessage.textContent = 'Проверка курсов...';
+    statusMessage.textContent = t('checking_rates');
     statusMessage.className = 'status-message info';
 
-    chrome.runtime.sendMessage({type: 'GET_CURRENCY_RATES', baseCurrency, force},
-        (response) => {
-            updateStatusMessage(response);
-        });
+    chrome.runtime.sendMessage(
+        {
+            type: 'GET_CURRENCY_RATES',
+            baseCurrency,
+            force
+        },
+        updateStatusMessage
+    );
 }
 
 function updateStatusMessage(response) {
     if (response.status === 'ok') {
-        statusMessage.textContent = response.cached ? 'Курсы актуальны (кэш)' : 'Курсы обновлены';
+        statusMessage.textContent = response.cached ? t('rates_actual') : t('rates_updated');
         statusMessage.className = 'status-message success';
         return;
     }
@@ -108,8 +119,7 @@ function renderSelect(currencies) {
     for (const [code, name] of currencies) {
         const option = document.createElement('option');
         option.value = code;
-        option.text = `${code.toUpperCase()} - ${name}`;
-        //option.selected = selected;
+        option.text = `${code.toUpperCase()} - ${getLocalizedCurrencyName(code, name)}`;
         baseCurrencySelect.appendChild(option);
     }
 }
@@ -123,9 +133,9 @@ function formatUpdated(ts) {
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(mins / 60);
 
-    if (mins < 1) return 'Только что';
-    if (mins < 60) return `${mins} минут назад`;
-    if (hours < 24) return `${hours} часов назад`;
+    if (mins < 1) return t('updated_recently');
+    if (mins < 60) return t('updated_minutes', [mins]);
+    if (hours < 24) return t('updated_hours', [hours]);
 
     return new Date(ts).toLocaleString();
 }
@@ -151,5 +161,22 @@ function sortCurrencies(currencies, mode = 'code') {
 
         default:
             return entries.sort(([a], [b]) => a.localeCompare(b));
+    }
+}
+
+function t(key, substitutions) {
+    return chrome.i18n.getMessage(key, substitutions);
+}
+
+function getLocalizedCurrencyName(code, name) {
+    try {
+        const display = new Intl.DisplayNames(
+            chrome.i18n.getUILanguage(),
+            { type: "currency" }
+        );
+
+        return display.of(code);
+    } catch (error) {
+        return name;
     }
 }

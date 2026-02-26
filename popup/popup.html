@@ -8,11 +8,11 @@
 <body>
     <div class="wrapper">
         <h1 class="popup-header">Простой конвертер валют</h1>
-        <label for="base-currency">Валюта, в которую будет производиться конвертация:</label>
+        <label for="base-currency" id="base-currency-label">
+            Валюта, в которую будет производиться конвертация:
+        </label>
         <input type="text" id="currency-search" placeholder="Поиск валюты...">
-        <select id="base-currency" size="8">
-            <option value="">Выберите валюту</option>
-        </select>
+        <select id="base-currency" size="8"></select>
         <div class="status">
             <div class="status-message" id="status"></div>
             <button id="refresh">Обновить</button>

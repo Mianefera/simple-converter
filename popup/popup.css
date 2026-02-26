@@ -39,7 +39,7 @@ label {
 select {
     font-family: inherit;
     font-size: var(--popup-font-size);
-    border-radius: var(--border-radius);
+    /*border-radius: var(--border-radius);*/
 }
 
 #base-currency, #currency-search {
