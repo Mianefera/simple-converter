@@ -137,7 +137,7 @@ function formatUpdated(ts) {
     if (mins < 60) return t('updated_minutes', [mins]);
     if (hours < 24) return t('updated_hours', [hours]);
 
-    return new Date(ts).toLocaleString();
+    return t('updated_date', [new Date(ts).toLocaleString()]);
 }
 
 function sortCurrencies(currencies, mode = 'code') {
