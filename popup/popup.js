@@ -1,3 +1,5 @@
+import {t} from "../util.js";
+
 const baseCurrencySelect = document.getElementById('base-currency');
 const refreshButton = document.getElementById('refresh');
 const statusMessage = document.getElementById('status');
@@ -29,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const baseCurrencyLabel = document.getElementById('base-currency-label');
     baseCurrencyLabel.textContent = t('base_currency');
 
-    const {currencies, selectedCurrency} = await chrome.storage.local.get(['currencies','selectedCurrency']);
+    const {currencies, selectedCurrency} = await chrome.storage.local.get(['currencies', 'selectedCurrency']);
     allCurrencies = sortCurrencies(currencies);
     renderSelect(allCurrencies);
     baseCurrencySelect.value = selectedCurrency;
@@ -56,7 +58,7 @@ baseCurrencySelect.addEventListener('change', (event) => {
 searchInput.addEventListener('input', (event) => {
     const query = event.target.value.trim().toLowerCase();
 
-    if(!query){
+    if (!query) {
         renderSelect(allCurrencies);
         return;
     }
@@ -164,18 +166,19 @@ function sortCurrencies(currencies, mode = 'code') {
     }
 }
 
-function t(key, substitutions) {
-    return chrome.i18n.getMessage(key, substitutions);
-}
-
 function getLocalizedCurrencyName(code, name) {
     try {
         const display = new Intl.DisplayNames(
             chrome.i18n.getUILanguage(),
-            { type: "currency" }
+            {type: "currency"}
         );
 
-        return display.of(code);
+        const localizedName = display.of(code);
+        if (localizedName === code) {
+            return name;
+        } else {
+            return localizedName;
+        }
     } catch (error) {
         return name;
     }

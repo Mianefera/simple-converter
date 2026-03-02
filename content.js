@@ -1,4 +1,5 @@
 import {searchPriceAndCode} from 'price-extractor';
+import {t} from "./util.js";
 
 let convertedValueContainer = document.querySelector('.converted-value-container');
 
@@ -8,7 +9,7 @@ if (!convertedValueContainer) {
     document.body.appendChild(convertedValueContainer);
 }
 
-document.addEventListener('mouseup', () => {
+document.addEventListener('mouseup', async () => {
     if (convertedValueContainer.style.display === 'inline-block') {
         hideContainer();
         return;
@@ -27,9 +28,7 @@ document.addEventListener('mouseup', () => {
 
     showContainer(selection, `${formatNumber(price) + ' ' + code + ' - '}<div class="spinner"></div>`);
 
-    let baseCurrency = 'RUB';
-
-    convert(baseCurrency.toLowerCase(), code.toLowerCase(), price);
+    await convert(code.toLowerCase(), price);
 });
 
 function showContainer(selection, text) {
@@ -119,29 +118,37 @@ function getTopCoordinate(selectionCoords) {
     return selectionCoords.bottom - selectionHeight - containerHeight - triangleHeight;
 }
 
-async function convert(baseCurrency, currency, sum) {
-    const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${currency}.json`;
+async function convert(currency, sum) {
     let displayText = '';
+
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
+        const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
+        if (!selectedCurrency) {
+            throw new Error(t('currency_is_not_selected'));
         }
-        const data = await response.json();
-        const rates = data[currency];
-        const rate = rates[baseCurrency];
-        const convertedSum = sum * rate;
-        displayText = constructDisplayText(sum, convertedSum, baseCurrency.toUpperCase(), currency.toUpperCase());
+        const ratesData = await requestRates(selectedCurrency);
+        if (ratesData.status === 'error') {
+            throw new Error(ratesData.message);
+        }
+
+        const rate = ratesData.data[currency];
+        const convertedSum = rate === 0 ? 0 : sum / rate;
+
+        displayText = constructDisplayText(sum, convertedSum, selectedCurrency.toUpperCase(), currency.toUpperCase());
     } catch (error) {
         console.error(error);
-        displayText = `Can't convert. ${error.message}`;
+        displayText = `${t('failed_to_convert')} ${error.message}`;
     }
+
     hideContainer();
+
     const selection = document.getSelection();
     const selectionString = selection.toString();
+
     if (!selectionString) {
         return;
     }
+
     showContainer(selection, displayText);
 }
 
@@ -156,4 +163,16 @@ function constructDisplayText(unconvertedSum, convertedSum, baseCurrencyCode, cu
     const formattedSum = formatNumber(unconvertedSum);
     const formattedConvertedSum = formatNumber(convertedSum);
     return [formattedSum, currencyCode, ' - ', formattedConvertedSum, baseCurrencyCode].join(' ');
+}
+
+async function requestRates(selectedCurrency) {
+    return new Promise(resolve => {
+        chrome.runtime.sendMessage(
+            {
+                type: 'GET_CURRENCY_RATES',
+                baseCurrency: selectedCurrency
+            },
+            resolve
+        );
+    });
 }

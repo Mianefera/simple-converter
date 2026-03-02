@@ -1,4 +1,5 @@
 import {fetchCurrencyRates} from "./api.js";
+import {t} from "../util.js";
 
 const RATES_TTL = 1000 * 60 * 60 * 24; // 1 day
 const RATES_DATA_KEY = 'ratesData';
@@ -27,7 +28,7 @@ export async function getCurrencyRates(baseCurrency, force = false) {
         await chrome.storage.local.set({[RATES_STATE_KEY]: state});
 
         return {
-            data: cachedRates[baseCurrency],
+            data: cachedRates.rates,
             cached: true,
             status: 'ok'
         };
@@ -74,7 +75,7 @@ export async function getCurrencyRates(baseCurrency, force = false) {
             return {
                 data: cachedRates.rates,
                 status: 'stale',
-                message: 'Используются устаревшие курсы'
+                message: t('outdated_currency_rates_are_used')
             }
         }
 
@@ -89,16 +90,16 @@ export async function getCurrencyRates(baseCurrency, force = false) {
 
         return {
             status: 'error',
-            message: 'Не удалось загрузить курсы валют'
+            message: t('failed_to_load_currency_rates')
         };
     }
 }
 
 export async function getRatesStatus() {
-    const {status} = await chrome.storage.local.get([RATES_STATE_KEY]);
+    const {[RATES_STATE_KEY]: status} = await chrome.storage.local.get([RATES_STATE_KEY]);
 
     return status ?? {
         status: 'error',
-        message: 'Не удалось загрузить курсы валют'
+        message: t('failed_to_load_currency_rates')
     }
 }

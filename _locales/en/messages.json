@@ -32,6 +32,18 @@
   "updated_recently": {
     "message": "Updated recently"
   },
+  "failed_to_convert": {
+    "message": "Failed to convert."
+  },
+  "failed_to_load_currency_rates": {
+    "message": "Failed to load currency rates."
+  },
+  "outdated_currency_rates_are_used": {
+    "message": "Outdated currency rates are used."
+  },
+  "currency_is_not_selected": {
+    "message": "Currency is not selected."
+  },
   "updated_minutes": {
     "message": "Updated $min$ minutes ago",
     "placeholders": {

@@ -32,6 +32,18 @@
   "updated_recently": {
     "message": "Обновлено только что"
   },
+  "failed_to_convert": {
+    "message": "Не удалось конвертировать."
+  },
+  "failed_to_load_currency_rates": {
+    "message": "Не удалось загрузить курсы валют."
+  },
+  "outdated_currency_rates_are_used": {
+    "message": "Используются устаревшие курсы валют."
+  },
+  "currency_is_not_selected": {
+    "message": "Валюта не выбрана."
+  },
   "updated_minutes": {
     "message": "Обновлено $min$ мин. назад",
     "placeholders": {
