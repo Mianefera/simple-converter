@@ -27,16 +27,20 @@ document.addEventListener('mouseup', async () => {
         return;
     }
 
-    showContainer(selection, `${formatNumber(price) + ' ' + code + ' - '}<div class="spinner"></div>`);
+    showContainer(selection, `${formatNumber(price, code) + ' ' + code + ' - '}<div class="spinner"></div>`);
 
     await convert(code.toLowerCase(), price);
 });
 
 async function init() {
-    const ratesData = await requestRates();
+    try {
+        const ratesData = await requestRates();
 
-    if (ratesData.status === 'ok' || ratesData.status === 'stale') {
-        currentRates = ratesData.data;
+        if (ratesData.status === 'ok' || ratesData.status === 'stale') {
+            currentRates = ratesData.data;
+        }
+    } catch (e) {
+        console.error(e);
     }
 }
 
@@ -176,7 +180,7 @@ function formatNumber(value, currency) {
 function constructDisplayText(unconvertedSum, convertedSum, baseCurrencyCode, currencyCode) {
     const formattedSum = formatNumber(unconvertedSum, currencyCode);
     const formattedConvertedSum = formatNumber(convertedSum, baseCurrencyCode);
-    return [formattedSum, currencyCode, ' - ', formattedConvertedSum, baseCurrencyCode].join(' ');
+    return `${formattedSum} - ${formattedConvertedSum}`;
 }
 
 async function requestRates() {
