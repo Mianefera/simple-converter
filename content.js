@@ -2,6 +2,7 @@ import {searchPriceAndCode} from 'price-extractor';
 import {t} from "./util.js";
 
 let convertedValueContainer = document.querySelector('.converted-value-container');
+let currentRates = null;
 
 if (!convertedValueContainer) {
     convertedValueContainer = document.createElement('div');
@@ -30,6 +31,16 @@ document.addEventListener('mouseup', async () => {
 
     await convert(code.toLowerCase(), price);
 });
+
+async function init() {
+    const ratesData = await requestRates();
+
+    if (ratesData.status === 'ok' || ratesData.status === 'stale') {
+        currentRates = ratesData.data;
+    }
+}
+
+await init();
 
 function showContainer(selection, text) {
     convertedValueContainer.style.display = 'inline-block';
@@ -122,17 +133,17 @@ async function convert(currency, sum) {
     let displayText = '';
 
     try {
-        const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
-        if (!selectedCurrency) {
-            throw new Error(t('currency_is_not_selected'));
-        }
-        const ratesData = await requestRates(selectedCurrency);
-        if (ratesData.status === 'error') {
-            throw new Error(ratesData.message);
+        if (!currentRates) {
+            const ratesData = await requestRates();
+            if (ratesData.status === 'error') {
+                throw new Error(ratesData.message);
+            }
+            currentRates = ratesData.data;
         }
 
-        const rate = ratesData.data[currency];
+        const rate = currentRates[currency];
         const convertedSum = rate === 0 ? 0 : sum / rate;
+        const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
 
         displayText = constructDisplayText(sum, convertedSum, selectedCurrency.toUpperCase(), currency.toUpperCase());
     } catch (error) {
@@ -152,20 +163,28 @@ async function convert(currency, sum) {
     showContainer(selection, displayText);
 }
 
-function formatNumber(value) {
-    const numberFormat = new Intl.NumberFormat('ru-RU', {
-        maximumFractionDigits: 2,
-    });
-    return numberFormat.format(value);
+function formatNumber(value, currency) {
+    return new Intl.NumberFormat(
+        chrome.i18n.getUILanguage(),
+        {
+            style: 'currency',
+            currency
+        }
+    ).format(value);
 }
 
 function constructDisplayText(unconvertedSum, convertedSum, baseCurrencyCode, currencyCode) {
-    const formattedSum = formatNumber(unconvertedSum);
-    const formattedConvertedSum = formatNumber(convertedSum);
+    const formattedSum = formatNumber(unconvertedSum, currencyCode);
+    const formattedConvertedSum = formatNumber(convertedSum, baseCurrencyCode);
     return [formattedSum, currencyCode, ' - ', formattedConvertedSum, baseCurrencyCode].join(' ');
 }
 
-async function requestRates(selectedCurrency) {
+async function requestRates() {
+    const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
+    if (!selectedCurrency) {
+        throw new Error(t('currency_is_not_selected'));
+    }
+
     return new Promise(resolve => {
         chrome.runtime.sendMessage(
             {
