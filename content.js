@@ -1,53 +1,61 @@
 import {searchPriceAndCode} from 'price-extractor';
 import {t} from "./util.js";
 
-let convertedValueContainer = document.querySelector('.converted-value-container');
+let convertedValueContainer = null;
 let currentRates = null;
 
-if (!convertedValueContainer) {
-    convertedValueContainer = document.createElement('div');
-    convertedValueContainer.classList.add('converted-value-container');
-    document.body.appendChild(convertedValueContainer);
+await init();
+
+async function init() {
+    if (!convertedValueContainer) {
+        convertedValueContainer = document.createElement('div');
+        convertedValueContainer.classList.add('converted-value-container');
+        document.body.appendChild(convertedValueContainer);
+    }
+
+    document.addEventListener('mouseup', handleMouseUp);
+
+    await loadRates();
 }
 
-document.addEventListener('mouseup', async () => {
-    if (convertedValueContainer.style.display === 'inline-block') {
+async function handleMouseUp() {
+    const selection = document.getSelection();
+    if (!selection || selection.isCollapsed) {
         hideContainer();
         return;
     }
 
-    const selection = document.getSelection();
-    const selectionString = selection.toString();
+    const selectionString = selection.toString().trim();
     if (!selectionString) {
+        hideContainer();
         return;
     }
 
     const {code, price} = searchPriceAndCode(selectionString);
     if (!code || !price) {
+        hideContainer();
         return;
     }
 
     showContainer(selection, `${formatNumber(price, code) + ' ' + code + ' - '}<div class="spinner"></div>`);
 
-    await convert(code.toLowerCase(), price);
-});
+    await convert(code.toLowerCase(), price, selection);
+}
 
-async function init() {
+async function loadRates() {
     try {
         const ratesData = await requestRates();
 
         if (ratesData.status === 'ok' || ratesData.status === 'stale') {
-            currentRates = ratesData.data;
+            currentRates = ratesData;
         }
     } catch (e) {
         console.error(e);
     }
 }
 
-await init();
-
 function showContainer(selection, text) {
-    convertedValueContainer.style.display = 'inline-block';
+    convertedValueContainer.style.display = 'block';
     convertedValueContainer.innerHTML = text;
     const {top, left} = getContainerPosition(selection);
     convertedValueContainer.style.left = left + 'px';
@@ -68,21 +76,18 @@ function hideContainer() {
     convertedValueContainer.innerHTML = '';
 }
 
-function getCoords(elem) {
-    let box = elem.getBoundingClientRect();
-
-    return {
-        top: box.top + window.scrollY,
-        right: box.right + window.scrollX,
-        bottom: box.bottom + window.scrollY,
-        left: box.left + window.scrollX,
-    };
+function updateContainer(selection, text) {
+    convertedValueContainer.innerHTML = text;
+    const {top, left} = getContainerPosition(selection);
+    convertedValueContainer.style.left = left + 'px';
+    convertedValueContainer.style.top = top + 'px';
 }
 
 function getContainerPosition(selection) {
     const range = selection.getRangeAt(0);
-    const selectionCoords = getCoords(range);
-    const containerWidth = convertedValueContainer.offsetWidth;
+    const selectionCoords = range.getBoundingClientRect();
+    const containerRect = convertedValueContainer.getBoundingClientRect();
+    const containerWidth = containerRect.width;
     const bodyWidth = document.body.offsetWidth;
     const triangleHeight = 10;
     let left = getLeftCoordinate(selectionCoords, convertedValueContainer);
@@ -133,38 +138,25 @@ function getTopCoordinate(selectionCoords) {
     return selectionCoords.bottom - selectionHeight - containerHeight - triangleHeight;
 }
 
-async function convert(currency, sum) {
-    let displayText = '';
-
+async function convert(currency, sum, selection) {
     try {
         if (!currentRates) {
             const ratesData = await requestRates();
             if (ratesData.status === 'error') {
                 throw new Error(ratesData.message);
             }
-            currentRates = ratesData.data;
+            currentRates = ratesData;
         }
 
-        const rate = currentRates[currency];
-        const convertedSum = rate === 0 ? 0 : sum / rate;
-        const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
+        const rate = currentRates.data[currency];
+        const convertedSum = sum / rate;
 
-        displayText = constructDisplayText(sum, convertedSum, selectedCurrency.toUpperCase(), currency.toUpperCase());
+        const text = constructDisplayText(sum, convertedSum, currentRates.currency.toUpperCase(), currency.toUpperCase());
+        updateContainer(selection, text);
     } catch (error) {
-        console.error(error);
-        displayText = `${t('failed_to_convert')} ${error.message}`;
+        const text = `${t('failed_to_convert')} ${error.message}`;
+        updateContainer(selection, text);
     }
-
-    hideContainer();
-
-    const selection = document.getSelection();
-    const selectionString = selection.toString();
-
-    if (!selectionString) {
-        return;
-    }
-
-    showContainer(selection, displayText);
 }
 
 function formatNumber(value, currency) {
@@ -184,10 +176,7 @@ function constructDisplayText(unconvertedSum, convertedSum, baseCurrencyCode, cu
 }
 
 async function requestRates() {
-    const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
-    if (!selectedCurrency) {
-        throw new Error(t('currency_is_not_selected'));
-    }
+    const selectedCurrency = await getSelectedCurrency();
 
     return new Promise(resolve => {
         chrome.runtime.sendMessage(
@@ -195,7 +184,16 @@ async function requestRates() {
                 type: 'GET_CURRENCY_RATES',
                 baseCurrency: selectedCurrency
             },
-            resolve
+            response => resolve({...response, currency: selectedCurrency})
         );
     });
+}
+
+async function getSelectedCurrency() {
+    const {selectedCurrency} = await chrome.storage.local.get('selectedCurrency');
+    if (!selectedCurrency) {
+        throw new Error(t('currency_is_not_selected'));
+    }
+
+    return selectedCurrency;
 }

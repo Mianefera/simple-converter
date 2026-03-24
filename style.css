@@ -14,7 +14,7 @@ body {
 }
 
 .converted-value-container {
-    position: absolute;
+    position: fixed;
     display: none;
     z-index: var(--max-z-index);
     padding: 5px;
@@ -26,6 +26,7 @@ body {
     color: black;
     font-family: system-ui, sans-serif;
     font-size: var(--font-size-base);
+    white-space: nowrap;
 }
 
 .converted-value-container.shadow-top {
