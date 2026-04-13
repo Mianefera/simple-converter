@@ -14,6 +14,7 @@ async function init() {
     }
 
     document.addEventListener('mouseup', handleMouseUp);
+    chrome.storage.onChanged.addListener(handleStorageChanges);
 
     await loadRates();
 }
@@ -196,4 +197,12 @@ async function getSelectedCurrency() {
     }
 
     return selectedCurrency;
+}
+
+async function handleStorageChanges(changes, area) {
+    if (area !== "local" || !changes.selectedCurrency) {
+        return;
+    }
+
+    currentRates = await requestRates();
 }
