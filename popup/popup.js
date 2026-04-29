@@ -64,7 +64,7 @@ searchInput.addEventListener('input', (event) => {
     }
 
     const filtered = allCurrencies.filter(([code, name]) =>
-        code.toLowerCase().includes(query) || name.toLowerCase().includes(query)
+        code.toLowerCase().includes(query) || getLocalizedCurrencyName(code, name).toLowerCase().includes(query)
     );
 
     if (filtered.length === 0) {
